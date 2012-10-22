@@ -26,36 +26,19 @@ class BasicHandler(webapp2.RequestHandler):
 
 class WebHandler(webapp2.RequestHandler): 
     def get(self):
-        url = u"https://api.twitter.com/1.1/statuses/user_timeline.json"
-        parameters = {
-            "screen_name" : "cnn",
-            "count" : 20}
-        oauth_request = oauth.OAuthRequest.from_consumer_and_token(
-            consumer, 
-            token=token, 
-            http_method='GET', 
-            http_url=url,
-            parameters = parameters)
-        oauth_request.sign_request(signature_method_hmac_sha1, consumer, token)
-        if parameters:
-            url = url + "?" + urllib.urlencode(parameters)
-        result = urlfetch.fetch(
-            url=url,
-            headers=oauth_request.to_header(),
-            method=urlfetch.GET)
-        template_values = {
-            "header" : oauth_request.to_header(),
-            "context" : json.loads(result.content)
-        }
+        
+        template_values = {}
         template = jinja_environment.get_template('web.html')
         self.response.out.write(template.render(template_values))
         
 class twitterHandler(webapp2.RequestHandler):
     def get(self):
+        count = int(self.request.get("count", default_value=20))
+        name = self.request.get("name", default_value="cnn")
         url = u"https://api.twitter.com/1.1/statuses/user_timeline.json"
         parameters = {
-            "screen_name" : "cnn",
-            "count" : 100}
+            "screen_name" : name,
+            "count" : count}
         oauth_request = oauth.OAuthRequest.from_consumer_and_token(
             consumer, 
             token=token, 
