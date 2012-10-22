@@ -1,0 +1,150 @@
+<html>
+	<head> 
+		<title> xingzhong </title>
+	</head>
+	<body>
+		<div class="navbar navbar-inverse navbar-static-top">
+			<div class="navbar-inner">
+				<div class="container">
+					<a class="brand" href="#">xingzhong</a>
+					<ul class="nav">
+						<li class="active"><a href="/">Home</a></li>
+					    <li><a href="http://blog.sirxu.com">Blog</a></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+		
+		<div class="container">
+			<div class="page-header">
+			  <h1>web analytics <small>course project for BIA660 @ Stevens</small></h1>
+			</div>
+			<div id="d3vis"> </div> 
+			<table class="table table-striped">
+				<caption> twitter </caption>
+				<thead>
+					<tr>
+						<th> profile </th>
+						<th> name </th>
+						<th> time </th>
+						<th> text </th>
+						<th> # </th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for c in context %}
+					<tr>
+						<td><img src='{{c.user.profile_image_url_https}}'></td>
+						<td>{{c.user.name}}</td>
+						<td>{{c.created_at}}</td>
+						<td>{{c.text}}</td>
+						<td>{{c.retweet_count}}</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+			<div class="well">
+				{% for c in context %}
+					<p> {{c.entities}} </p>
+				{% endfor %}
+			</div>
+			<div class="well">
+				<p>[
+				{% for c in context %}
+					 {{c.retweet_count}},
+				{% endfor %}]
+				</p>
+			</div>
+			<hr>
+			<footer>
+				<p>Xingzhong 2012</p>
+			</footer>
+		</div>
+		
+	</body>
+	<script src="http://code.jquery.com/jquery.min.js"></script>
+	<script src="../static/bootstrap/js/bootstrap.min.js"></script>
+	<link href="../static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	<script src="http://d3js.org/d3.v2.js"></script>
+	<style>
+		.axis path,
+		.axis line {
+		  fill: none;
+		  stroke: #000;
+		  shape-rendering: crispEdges;
+		}
+		.x.axis path {
+		  display: none;
+		}
+
+		.line {
+		  fill: none;
+		  stroke: steelblue;
+		  stroke-width: 1.5px;
+		}
+	</style>
+	<script type="text/javascript">
+		
+		var width = 500;
+		var height = 500;
+		var format = d3.time.format("%a %b %e %H:%M:%S %Y").parse;
+		var x = d3.time.scale()
+		    .range([0, width]);
+			
+		var y = d3.scale.linear()
+		    .range([height, 0]);
+			
+		var xAxis = d3.svg.axis()
+			.scale(x)
+			.orient("bottom");
+			
+		var yAxis = d3.svg.axis()
+			.scale(y)
+			.orient("left");
+			
+		var line = d3.svg.line()
+			.x(function(d) { return x(d.time); })
+			.y(function(d) { return y(d.retweet_count); });
+			
+		var svg = d3.select("div#d3vis")
+					.append("svg")
+			        .attr("width", width)
+			        .attr("height", height)
+					.append("g"); 
+					
+		d3.json("/tapi", function(json){
+			json.forEach(function(d) {
+				d.time = format(d.created_at.slice(0,19)+d.created_at.slice(25));
+				d.retweet_count = +d.retweet_count;
+				d.name = d.user.name;
+				d.img = d.user.profile_image_url_https;
+				d.text = d.text;
+				console.log(d);
+			});
+			
+			x.domain(d3.extent(json, function(d) { return d.time; }));
+			y.domain(d3.extent(json, function(d) { return d.retweet_count; }));
+			
+			svg.append("g")
+			      .attr("class", "x axis")
+				  .attr("transform", "translate(0," + height + ")")
+			      .call(xAxis);
+			
+			svg.append("g")
+			    .attr("class", "y axis")
+			    .call(yAxis)
+			  	.append("text")
+				.attr("transform", "rotate(-90)")
+			    .attr("y", 6)
+			    .attr("dy", ".71em")
+			    .style("text-anchor", "end")
+			    .text("Price ($)");
+				
+			svg.append("path")
+			      .datum(json)
+			      .attr("class", "line")
+			      .attr("d", line);
+		});
+	</script>
+	
+</html>
