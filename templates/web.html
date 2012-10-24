@@ -19,42 +19,50 @@
 			<div class="page-header">
 			  <h1>web analytics <small>course project for BIA660 @ Stevens</small></h1>
 			</div>
+			
+			<form class="offset1">
+				<div class="input-append">
+			  		<input type="text" id="tname" class="span8" style="height:30px;"value="BarackObama, MittRomney, JoeBiden, PaulRyanVP">
+			  		<button type="button" id="tnameb" class="btn btn-primary">analyze</button>
+				</div>
+			</form>
+			
 			<div id="d3vis"> </div> 
-			<table class="table table-striped">
-				<caption> twitter </caption>
-				<thead>
-					<tr>
-						<th> profile </th>
-						<th> name </th>
-						<th> time </th>
-						<th> text </th>
-						<th> # </th>
-					</tr>
-				</thead>
-				<tbody>
-					{% for c in context %}
-					<tr>
-						<td><img src='{{c.user.profile_image_url_https}}'></td>
-						<td>{{c.user.name}}</td>
-						<td>{{c.created_at}}</td>
-						<td>{{c.text}}</td>
-						<td>{{c.retweet_count}}</td>
-					</tr>
-					{% endfor %}
-				</tbody>
-			</table>
-			<div class="well">
-				{% for c in context %}
-					<p> {{c.entities}} </p>
-				{% endfor %}
-			</div>
-			<div class="well">
-				<p>[
-				{% for c in context %}
-					 {{c.retweet_count}},
-				{% endfor %}]
-				</p>
-			</div>
+			<hr>
+			<ul class="thumbnails" id="tweeter">
+				<li class="span1"> </li>
+			</ul>
+			<hr>
+			<h2> data visualization </h2>
+			<p class="offset9"> - Xingzhong and Dami <br> - Oct 24, 2013 </p>
+			<h3> introduction </h3>
+			<p class="lead">
+				This project aims to explorer the time sequece data through the cloud service api. 
+			</p>
+			<p>
+				There are two significant features for big data analysis in recent years. 
+				The first one is that the so called "big" data is tend to "small". 
+				We realize that the mordern online services are foucs on the tiny timestamped event data. 
+				Usually the collected data itself is small and easily packaged through json and xml.
+				However, the reason we called it "big" data is because, 
+				there are huge amount of "small" data generated and waiting for process every minutes, every seconds.
+				Secondly, the big data analysis is focus on the metric of the data instead of store the data itself.
+				The large amount of data is useless unless people know how to derive the useful metric through the data.
+				And visulization is the most talented method to illustrate those metrics.
+			</p>
+			<p>
+				For example, twitter, square and even our new startup yesgoody facing the same big data challenge. 
+				Either a 140 characters tweet, or a small purchase confirmation is a light-weighted timestamp data.
+				Technically, collect and store such data should not be a problem. 
+				However, when we really take a look at the collected data, we will easily get lost in the data chaos.
+			</p>
+			<p>
+				In this project, we will take the twitter's timeline as a start point to explore the world of big data visualization.
+				However, analyzing twitter data is not our final goal. 
+				We are trying to find a more generic method to analyze the "small" and "big" data. 
+				And further utlized to yesgoody transcation data.
+			</p>
+			<h3> data and problem </h3>
 			<hr>
 			<footer>
 				<p>Xingzhong 2012</p>
@@ -67,104 +75,205 @@
 	<link href="../static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
 	<script src="../static/d3.js"></script>
 	<style>
-		.axis path,
 		.axis line {
 		  fill: none;
 		  stroke: #000;
 		  shape-rendering: crispEdges;
 		}
-
-		.bar {
-  			fill-opacity: .9;
+		.x.axis path {
+		  display: none;
 		}
-		.title {
-			font-size: 15px;
-			width:100px;
+		.bar {
+  			fill-opacity: .7;
+		}
+		
+		.ttext {
+			font-size: 14px;
+		}
+		.ttitle {
+			font-size: 16px;
+			
+		}
+		.tblock {
+			fill:white;
+			fill-opacity:0.9;
 		}
 	</style>
 	<script type="text/javascript">
 		var margin = {top: 20, right: 20, bottom: 30, left: 50},
     		width = 960 - margin.left - margin.right,
-    		height = 500 - margin.top - margin.bottom;
+    		height = 400 - margin.top - margin.bottom;
 
 		var format = d3.time.format("%a %b %e %H:%M:%S %Y").parse;
 		var x = d3.time.scale()
 		    .range([0, width]);
 
-		var y = d3.scale.linear()
+		var y = d3.scale.log()
 			.range([height, 0]);
 
-		var color = d3.rgb("violet")
+		var color = d3.scale.category10()
 
 			
 		var xAxis = d3.svg.axis()
 			.scale(x)
 			.orient("bottom")
-			.tickFormat(d3.time.format("%b %e %HH"));
+			//.tickFormat(d3.time.format("%b %e\n %HH"));
 			
 		var yAxis = d3.svg.axis()
 			.scale(y)
 			.orient("left");
 
-			
-		var svg = d3.select("div#d3vis")
+		 	
+		
+		
+		$("#tnameb").click(function() {
+		  	tname = $("#tname").val();
+			d3.select("svg").remove();
+			var svg = d3.select("div#d3vis")
 					.append("svg")
 			        .attr("width", width + margin.left + margin.right)
 			        .attr("height", height + margin.top + margin.bottom)
 					.append("g")
-					.attr("transform", "translate(" + margin.left + "," + margin.top + ")"); 
-					
-		d3.json("/tapi?count=40&name=cnn", function(json){
-			json.forEach(function(d) {
-				d.time = format(d.created_at.slice(0,19)+d.created_at.slice(25));
-				d.retweet_count = +d.retweet_count;
-				d.name = d.user.name;
-				d.img = d.user.profile_image_url_https;
-				d.text = d.text;
-				console.log(d);
-			});
-
-			x.domain(d3.extent(json, function(d) { return d.time; }));
-			y.domain(d3.extent(json, function(d) { return d.retweet_count;}));
-			console.log(d3.extent(json, function(d) { return d.retweet_count;}));
-			svg.append("g")
-				.attr("class", "x axis")
-				.attr("transform", "translate(0," + height + ")")
-				.call(xAxis);
-
-			svg.append("g")
-				.attr("class", "y axis")
-				.call(yAxis);
-
-			title = svg.append("g")
-					.append("text")
-					.attr("class", "text")
-					.attr("y", ".71em")
-					.attr("x", ".71em")
-					.text("")
-
-			image = title.append("image")
-					.attr("x", ".71em")
-					.attr("y", "1.71em");
-					
-
-			
-			svg.selectAll(".bar")
-				.data(json)
-				.enter().append("circle")
-				.attr("class", "bar")
-				.attr("cx", function(d) { return x(d.time);})
-				.attr("cy", function(d) { return y(d.retweet_count); })
-				.attr("r", 10)
-				.attr("fill", function(d) {
-					return color.darker((y(d.retweet_count))/300);
-				})
-				.on("mouseover", function(d){ 
-					title.text(d.text);
-					image.attr("xlink:href", d.img);
+					.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+			d3.json("/tapi?count=50&name="+tname, function(json){
+				var commonMin = new Object();
+				var legend = new Object();
+				json.forEach(function(d) {
+					d.time = format(d.created_at.slice(0,19)+d.created_at.slice(25));
+					d.retweet_count = +d.retweet_count+1;
+					d.name = d.user.name;
+					d.img = d.user.profile_image_url_https;
+					d.text = d.text;
+					if (commonMin[d.name] == undefined){
+						commonMin[d.name] = d.time;
+					}
+					else if(d.time < commonMin[d.name]){
+						commonMin[d.name] = d.time;
+					}
+					if (legend[d.name] == undefined){
+						legend[d.name] = {name:d.name, img:d.img, color:color(d.name)};
+					}
+					//console.log(d);
 				});
 				
+				var maxtime = 0 ;
+				for (var prop in commonMin) {
+					if (commonMin[prop] > maxtime){
+						maxtime = commonMin[prop];
+					}
+				}
+				
+				//console.log(legend);
+				var i = 0;
+				d3.select("#tweeter").html(" ");
+				for (var prop in legend) {
+					
+					thumb = d3.select("#tweeter")
+						.append("li")
+						.attr("class", "span2");
+						
+					thumb.append("div")
+						.attr("class", "thumbnail")
+						.attr("style", "background-color:"+legend[prop].color+";background-image:None;")
+						.append("img")
+						.attr("src", legend[prop].img);
+						
+					thumb.append("p")
+						.text(legend[prop].name);
+				}
+					
+				x.domain([maxtime, d3.max(json, function(d) { return d.time; })] );
+				y.domain(d3.extent(json, function(d) { return d.retweet_count;}));
+			
+				svg.append("g")
+					.attr("class", "x axis")
+					.attr("transform", "translate(0," + height + ")")
+					.call(xAxis);
+
+				svg.selectAll(".bar")
+					.data(json)
+					.enter().append("circle")
+					.attr("class", "bar")
+					.attr("cx", function(d) { return x(d.time);})
+					.attr("cy", function(d) { return y(d.retweet_count); })
+					.attr("r", function(d) { 
+						return 2.5*Math.log(d.retweet_count);
+					})
+					.attr("fill", function(d) {
+						return color(d.name);
+					})
+					.on("mouseover", function(d){ 
+						if (x(d.time) > width/2){
+							tw = x(d.time) - 400;
+						}
+						else {
+							tw = x(d.time);
+						}
+						if (y(d.retweet_count) > height/2){
+							th = y(d.retweet_count) - 70;
+						}
+						else {
+							th = y(d.retweet_count);
+						}
+						tweet
+						.attr("transform", "translate(" + tw + "," + th + ")");
+						title.text(d.name + "  [#"+d.retweet_count+"]");
+						if (d.text.length > 100){
+							ttext1.text(d.text.slice(0,50));
+							ttext2.text(d.text.slice(50,100));
+							ttext3.text(d.text.slice(100));
+						}
+						else if (d.text.length > 50) {
+							ttext1.text(d.text.slice(0,50));
+							ttext2.text(d.text.slice(50));
+						}
+						else{
+							ttext1.text(d.text);
+						}
+						image.attr("xlink:href", d.img);
+					});	
+					tweet = svg.append("g")
+						.attr("id", "tweet");
+				
+					block = tweet
+							.append("rect")
+							.attr("class", "tblock")
+							.attr("height", 70)
+							.attr("width", 400)
+						
+					
+					title = tweet
+							.append("text")
+							.attr("class", "ttitle")
+							.attr("dx", 55)
+							.attr("dy", 20);
+						
+					ttext1 = tweet
+							.append("text")
+							.attr("class", "ttext")
+							.attr("dx", 55)
+							.attr("dy", 35);
+					ttext2 = tweet
+							.append("text")
+							.attr("class", "ttext")
+							.attr("dx", 60)
+							.attr("dy", 50);
+						
+					ttext3 = tweet
+							.append("text")
+							.attr("class", "ttext")
+							.attr("dx", 60)
+							.attr("dy", 65);		
+
+					image = tweet
+							.append("image")
+							.attr("height", 48)
+							.attr("width", 48)
+			});
+
 		});
+		
+		
 	</script>
 	
 </html>

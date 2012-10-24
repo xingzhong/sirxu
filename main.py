@@ -5,6 +5,7 @@ import os
 import oauth
 import urllib
 import json
+import logging
 from google.appengine.api import urlfetch
 
 jinja_environment = jinja2.Environment(autoescape=True,
@@ -33,29 +34,35 @@ class WebHandler(webapp2.RequestHandler):
         
 class twitterHandler(webapp2.RequestHandler):
     def get(self):
-        count = int(self.request.get("count", default_value=20))
+        count = int(self.request.get("count", default_value=50))
+        since = self.request.get("since", default_value=12345)
         name = self.request.get("name", default_value="cnn")
+        names = name.split(',')
         url = u"https://api.twitter.com/1.1/statuses/user_timeline.json"
-        parameters = {
-            "screen_name" : name,
-            "count" : count}
-        oauth_request = oauth.OAuthRequest.from_consumer_and_token(
-            consumer, 
-            token=token, 
-            http_method='GET', 
-            http_url=url,
-            parameters = parameters)
-        oauth_request.sign_request(signature_method_hmac_sha1, consumer, token)
-        if parameters:
-            url = url + "?" + urllib.urlencode(parameters)
-        result = urlfetch.fetch(
-            url=url,
-            headers=oauth_request.to_header(),
-            method=urlfetch.GET)
-            
-        if result.status_code == 200:
-            self.response.headers['Content-Type'] = 'application/json'
-            self.response.out.write(result.content) 
+        ret = []
+        for n in names:
+            logging.info(n)
+            parameters = {
+                "screen_name" : n,
+                "count" : count}
+            oauth_request = oauth.OAuthRequest.from_consumer_and_token(
+                consumer, 
+                token=token, 
+                http_method='GET', 
+                http_url=url,
+                parameters = parameters)
+            oauth_request.sign_request(signature_method_hmac_sha1, consumer, token)
+            if parameters:
+                url2 = url + "?" + urllib.urlencode(parameters)
+            result = urlfetch.fetch(
+                url=url2,
+                headers=oauth_request.to_header(),
+                method=urlfetch.GET)
+            if result.status_code == 200:
+                ret.extend(json.loads(result.content))
+        
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.out.write(json.dumps(ret)) 
         
 app = webapp2.WSGIApplication([
     ('/', BasicHandler),
