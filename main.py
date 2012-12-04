@@ -27,9 +27,14 @@ class BasicHandler(webapp2.RequestHandler):
 
 class WebHandler(webapp2.RequestHandler): 
     def get(self):
-        
         template_values = {}
         template = jinja_environment.get_template('web.html')
+        self.response.out.write(template.render(template_values))
+        
+class MLSHandler(webapp2.RequestHandler): 
+    def get(self):
+        template_values = {}
+        template = jinja_environment.get_template('mls2.html')
         self.response.out.write(template.render(template_values))
         
 class twitterHandler(webapp2.RequestHandler):
@@ -63,9 +68,40 @@ class twitterHandler(webapp2.RequestHandler):
         
         self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(json.dumps(ret)) 
+
+class twitter2Handler(webapp2.RequestHandler):
+    def get(self):
+        trend = self.request.get("trend", default_value=None)
         
+        if trend : 
+            ret = []
+            url = u"https://api.twitter.com/1.1/trends/available.json"
+            parameters = None
+            oauth_request = oauth.OAuthRequest.from_consumer_and_token(
+                consumer, 
+                token=token, 
+                http_method='GET', 
+                http_url=url,
+                parameters = parameters)
+            oauth_request.sign_request(signature_method_hmac_sha1, consumer, token)
+            if parameters:
+                url2 = url + "?" + urllib.urlencode(parameters)
+            else :
+                url2 = url
+            result = urlfetch.fetch(
+                url=url2,
+                headers=oauth_request.to_header(),
+                method=urlfetch.GET)
+            if result.status_code == 200:
+                ret = json.loads(result.content)
+        
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.out.write(json.dumps(ret))
+                 
 app = webapp2.WSGIApplication([
     ('/', BasicHandler),
     ('/web', WebHandler),
+    ('/mls', MLSHandler),
     ('/tapi', twitterHandler),
+    ('/tapi2', twitter2Handler),
     ],debug=True)

@@ -19,50 +19,92 @@
 			<div class="page-header">
 			  <h1>web analytics <small>course project for BIA660 @ Stevens</small></h1>
 			</div>
+			<div class="tabbable"> <!-- Only required for left/right tabs -->
+			  <ul class="nav nav-tabs">
+			    <li class="active"><a href="#tab1" data-toggle="tab">Section 1</a></li>
+			    <li><a href="#tab2" data-toggle="tab">Section 2</a></li>
+			  </ul>
+			  <div class="tab-content">
+			    <div class="tab-pane active" id="tab1">
+					<form class="offset1">
+						<div class="input-append">
+					  		<input type="text" id="tname" class="span8" style="height:30px;"value="BarackObama, MittRomney, JoeBiden, PaulRyanVP">
+					  		<button type="button" id="tnameb" class="btn btn-primary">analyze</button>
+						</div>
+					</form>
+					<div id="d3vis1"> </div> 
+					<hr>
+					<ul class="thumbnails" id="tweeter">
+						<li class="span1"> </li>
+					</ul>
+			    </div>
+			    <div class="tab-pane" id="tab2">
+					<form class="offset1">
+						<div class="input-append">
+					  		<input type="text" id="tname" class="span8" style="height:30px;"value="BarackObama, MittRomney, JoeBiden, PaulRyanVP">
+					  		<button type="button" id="tab2button" class="btn btn-primary">analyze</button>
+						</div>
+					</form>
+			      	<div id="d3vis2"> </div> 
+			    </div>
+			  </div>
+			</div>
 			
-			<form class="offset1">
-				<div class="input-append">
-			  		<input type="text" id="tname" class="span8" style="height:30px;"value="BarackObama, MittRomney, JoeBiden, PaulRyanVP">
-			  		<button type="button" id="tnameb" class="btn btn-primary">analyze</button>
-				</div>
-			</form>
-			
-			<div id="d3vis"> </div> 
-			<hr>
-			<ul class="thumbnails" id="tweeter">
-				<li class="span1"> </li>
-			</ul>
 			<hr>
 			<h2> data visualization </h2>
-			<p class="offset9"> - Xingzhong and Dami <br> - Oct 24, 2013 </p>
-			<h3> introduction </h3>
+			<p class="offset9"> - Xingzhong and Dami <br> - Nov 20, 2012 </p>
+			
 			<p class="lead">
-				This project aims to explorer the time sequece data through the cloud service api. 
+				this project aims to explore light weighted, time sequenced data extracted from a cloud service api, while following election 2012 candidates.
 			</p>
+			<h3> introduction </h3>
 			<p>
-				There are two significant features for big data analysis in recent years. 
-				The first one is that the so called "big" data is tend to "small". 
-				We realize that the mordern online services are foucs on the tiny timestamped event data. 
-				Usually the collected data itself is small and easily packaged through json and xml.
-				However, the reason we called it "big" data is because, 
-				there are huge amount of "small" data generated and waiting for process every minutes, every seconds.
-				Secondly, the big data analysis is focus on the metric of the data instead of store the data itself.
-				The large amount of data is useless unless people know how to derive the useful metric through the data.
-				And visulization is the most talented method to illustrate those metrics.
+				There are two significant features for big data analysis in recent years.  Firstly, this so called big data tends to be small in terms of respective data element sizes. We realize that the modern online services are focus on the small timestamped event data;  usually this collected data is small and easily packaged through json and xml.  However, we call big data; because, there are huge amounts of this data being generated and waiting to be processed for any and every time interval desired. Secondly, the big data analysis is focused on data metrics, as opposed to data storage. This data is useless unless useful data metrics and analyses are derived.  
 			</p>
+			<h3> problem and insights </h3>
 			<p>
-				For example, twitter, square and even our new startup yesgoody facing the same big data challenge. 
-				Either a 140 characters tweet, or a small purchase confirmation is a light-weighted timestamp data.
-				Technically, collect and store such data should not be a problem. 
-				However, when we really take a look at the collected data, we will easily get lost in the data chaos.
+				For example, twitter, square, and our new startup yesgoody face the same big data challenges.  Whether the data is represented by 140 character tweet or a simple purchase confirmation, the data share a common features of being light weighted and  time sequenced.  
+
+				Technically, collection and storage of the data does not present a problem.  It is finding the correct a view of the collected data, otherwise it is easy to get lost in the data chaos.  To remedy this, data visualization is a highly intuitive and clear method to present, explore, and understand such data; while providing a clear roadmap into the data to find insights.  
+
+				As such, we utilized twitter's timeline data of the 2012 Presidential and Vice-Presidential candidates tweets, as our starting point to explore the world of big data visualization.  As such, we wanted to know which of the candidates:
 			</p>
-			<p>
-				In this project, we will take the twitter's timeline as a start point to explore the world of big data visualization.
-				However, analyzing twitter data is not our final goal. 
-				We are trying to find a more generic method to analyze the "small" and "big" data. 
-				And further utlized to yesgoody transcation data.
+			<ul>
+				<li> 
+					has the greatest overall twitter “presence”?  By presence, we mean vocalizes and engages the community via tweets.
+				</li>
+				<ul>
+					<li>
+						Throughout the race, Obama/Biden has always maintained leading presence.  As for individual candidate presence, the ranking has been Obama always leading, Romney and Biden interchanging for 2nd and 3rd place, and Ryan always following.
+					</li>
+					<li>
+						We seen after the election, little to no presence from Romney/Ryan.  And the same continued presence momentum from Obama/Biden. 
+					</li>
+				</ul>
+				<li>
+					has the highest frequency of tweets observable through time (2 week periods)?  
+					<ul>
+						<li>
+							#1 - Obama, #2 - Biden, #3 - Romney, & #4 - Ryan. This is highly reflective of campaign culture and style.   
+						</li>
+					</ul>
+				</li>
+				<li>
+					were more prone to change their tweeting pattern during race culminating up to the election?
+					<ul>
+						<li>
+							It was observable from tweet patterns that Obama/Biden maintained consistency of presence momentum. 
+						</li>
+						<li>
+							While Romney/Ryan showed significant variations in presence momentum at different events through the race running into the election.  And has virtually, gone to zero presence momentum of tweets. 
+						</li>
+					</ul>
+				</li>
+			</ul>
+			
+			<h3> approach and objective </h3>
+			<p> Though analyses of twitter data is not our goal, we are using it to discover a more generic method to analyze this type of light weighted, time sequenced  data.  And later extend our discoveries to our end goal concerns of yesgoody’s transaction data.
 			</p>
-			<h3> data and problem </h3>
 			<hr>
 			<footer>
 				<p>Xingzhong 2012</p>
@@ -98,6 +140,7 @@
 			fill:white;
 			fill-opacity:0.9;
 		}
+		
 	</style>
 	<script type="text/javascript">
 		var margin = {top: 20, right: 20, bottom: 30, left: 50},
@@ -123,13 +166,38 @@
 			.scale(y)
 			.orient("left");
 
-		 	
+		$("#tab2button").click(function(){
+			d3.select("svg").remove();
+			var svg = d3.select("div#d3vis2")
+					.append("svg")
+			        .attr("width", width + margin.left + margin.right)
+			        .attr("height", height + margin.top + margin.bottom)
+					.append("g")
+					.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+					
+			var geoposition =svg.append("text")
+			  .attr("x",60)
+			  .attr("y",60);
+			
+			start = Date.now();	
+			speed = 0.1;
+			d3.json("/tapi2?trend=1", function(json) {
+				d3.timer(function(){
+					t = (Date.now() - start)*speed;
+					text = json[parseInt(t/width)].name;
+					geoposition
+						.attr("x", t%width)
+						.text(text);
+				});
+			});
+			
+		});
 		
 		
 		$("#tnameb").click(function() {
 		  	tname = $("#tname").val();
 			d3.select("svg").remove();
-			var svg = d3.select("div#d3vis")
+			var svg = d3.select("div#d3vis1")
 					.append("svg")
 			        .attr("width", width + margin.left + margin.right)
 			        .attr("height", height + margin.top + margin.bottom)
