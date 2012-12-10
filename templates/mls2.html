@@ -11,6 +11,7 @@
   display: inline-block;
   height: 151px;
   margin-bottom: 20px;
+  margin-left: 10px;
 }
 
 .reset {
@@ -47,6 +48,16 @@
   stroke: #666;
 }
 
+.meanValue{
+	font-size:25px;
+	position: relative;
+	top: 30px;
+	right: 5px;
+}
+
+#price-chart>.meanValue{
+	top:0px;
+}
 
 #flight-list {
   min-height: 1024px;
@@ -60,7 +71,7 @@
 #flight-list .flight {
   line-height: 1.5em;
   background: #eee;
-  width: 730px;
+  width: 900px;
   margin-bottom: 1px;
 }
 
@@ -77,21 +88,23 @@
 
 #flight-list .bed,
 #flight-list .bath,
+#flight-list .sqft,
 #flight-list .daysOn {
 	width: 40px;
 }
 
-#flight-list div.price,
-#flight-list div.city {
-  width: 120px;
+#flight-list div.price{
+    width: 100px;
+    padding-right: 10px;
+}
+#flight-list div.city,
+#flight-list div.address {
+  width: 150px;
   padding-right: 10px;
-  
 }
-
-#flight-list .early {
-  color: green;
+#totals{
+	font-color:steelblue;
 }
-
 
 </style>
 </head>
@@ -112,25 +125,40 @@
 		<div class="page-header">
 		  <h1>web analytics <small>course project for BIA660 @ Stevens</small></h1>
 		</div>
+		<div class="alert" id="debug">
+			This project is done by Xingzhong, Dami and Chris.
+		</div>
 		<div id="bed-chart" class="chart">
 			<div class="title">Bedroom</div>
+			<div class="meanValue pull-right"></div>
 		</div>
 		<div id="bath-chart" class="chart">
 			<div class="title">Bathroom</div>
+			<div class="meanValue pull-right"></div>
 		</div>
 		<div id="dayon-chart" class="chart">
 			<div class="title">Days on sale</div>
+			<div class="meanValue pull-right"></div>
+		</div>
+		<div id="sqft-chart" class="chart">
+			<div class="title">Sqft</div>
+			<div class="meanValue pull-right"></div>
 		</div>
 		<div id="price-chart" class="chart">
 			<div class="title">Price</div>
+			<div class="meanValue pull-right"></div>
 		</div>
 		<div id="date-chart" class="chart">
 			<div class="title">Date</div>
 		</div>
 		<aside class="offset9" id="totals"><span id="active">-</span> of <span id="total">-</span> flights selected.</aside>
 		<div id="lists">
-		  <div id="flight-list" class="list"></div>
+		  <div id="flight-list" class="list">
+		  </div>
 		</div>
+		<footer>
+			<p>Xingzhong 2012</p>
+		</footer>
 	</div>
 </body>
 
@@ -141,10 +169,10 @@
 <script src="../static/crossfilter.v1.js"></script>
 
 <script>
-
+var debug;
 // (It's CSV, but GitHub Pages only gzip's JSON at the moment.)
 // d3.csv("../static/data/flights.json", function(flights) {
-d3.csv("../static/data/mls_data_sample.csv", function(flights) {
+d3.csv("../static/data/mls_dami.csv", function(flights) {
   // Various formatters.
   var formatNumber = d3.format(",d"),
       formatChange = d3.format("+,d"),
@@ -166,7 +194,8 @@ d3.csv("../static/data/mls_data_sample.csv", function(flights) {
 	d.price = +parseInt(d.Price.replace(/\$|,/g, ""));
 	d.bed = +d.Bedrooms;
 	d.bath = +d["Total Bathrooms"];
-	console.log(d);
+	d.sqft = +d["Approx Sq Ft"];
+	debug = d;
   });
 
   // Create the crossfilter for the relevant dimensions and groups.
@@ -179,52 +208,63 @@ d3.csv("../static/data/mls_data_sample.csv", function(flights) {
 	  bath = flight.dimension(function(d) { return d.bath; }),
       baths = bath.group(),
       dayon = flight.dimension(function(d) { return  d.daysOn; }),
-      dayons = dayon.group(),
+      dayons = dayon.group(function(d) { return Math.floor(d / 20) * 20; }),
+      sqft = flight.dimension(function(d) { return  d.sqft; }),
+      sqfts = sqft.group(function(d) { return Math.floor(d / 100) * 100; }),
       price = flight.dimension(function(d) { return  d.price; }),
-      prices = price.group(function(d) { return Math.floor(d / 100000) * 100000; });
-
+      prices = price.group(function(d) { return Math.floor(d / 1000) * 1000; });
+	  
+  console.log(d3.extent(flights, function(d) { return d.daysOn; }));
+  
   var charts = [
 
     barChart()
         .dimension(bed)
         .group(beds)
       .x(d3.scale.linear()
-        .domain([1, 6])
+        .domain(d3.extent(flights, function(d) { return d.bed; }))
         .rangeRound([0, 100])),
 		
     barChart()
         .dimension(bath)
         .group(baths)
       .x(d3.scale.linear()
-        .domain([0, 6])
-        .rangeRound([0, 100])),
+        .domain(d3.extent(flights, function(d) { return d.bath; }))
+        .rangeRound([0, 90])),
 
     barChart()
         .dimension(dayon)
         .group(dayons)
       .x(d3.scale.linear()
-        .domain([0, 300])
-        .rangeRound([0, 250])),
+        .domain([0, 400])
+        .rangeRound([0, 200])),
+		
+    barChart()
+        .dimension(sqft)
+        .group(sqfts)
+      .x(d3.scale.linear()
+        .domain([500, 1500])
+        .rangeRound([0, 150])),
 
     barChart()
         .dimension(price)
         .group(prices)
       .x(d3.scale.linear()
-        .domain([1000, 10000000])
-        .rangeRound([0, 300])),
-
+        .domain(d3.extent(flights, function(d) { return d.price; }))
+        .rangeRound([0, 200]) ),
+	
     barChart()
         .dimension(date)
         .group(dates)
         .round(d3.time.day.round)
       .x(d3.time.scale()
-        .domain([new Date(2003, 1, 1), new Date(2011, 1, 1)])
+        .domain(d3.extent(flights, function(d) { return d.date; }))
         .rangeRound([0, 10 * 90]))
         .filter([new Date(2007, 1, 1), new Date(2009, 1, 1)])
 		
 
   ];
-
+  
   // Given our array of charts, which we assume are in the same order as the
   // .chart elements in the DOM, bind the charts to the DOM and render them.
   // We also listen to the chart's brush events to update the display.
@@ -239,12 +279,19 @@ d3.csv("../static/data/mls_data_sample.csv", function(flights) {
   // Render the total.
   d3.selectAll("#total")
       .text(formatNumber(flight.size()));
+  
+  
 
   renderAll();
 
   // Renders the specified chart or list.
   function render(method) {
     d3.select(this).call(method);
+	$("#bed-chart>.meanValue").text(getMean(beds));
+	$("#bath-chart>.meanValue").text(getMean(baths));
+	$("#dayon-chart>.meanValue").text(getMean(dayons));
+	$("#sqft-chart>.meanValue").text(getMean(sqfts));
+	$("#price-chart>.meanValue").text("$"+getMean(prices));
   }
 
   // Whenever the brush moves, re-rendering everything.
@@ -252,9 +299,19 @@ d3.csv("../static/data/mls_data_sample.csv", function(flights) {
     chart.each(render);
     list.each(render);
     d3.select("#active").text(formatNumber(all.value()));
+
+
   }
 
-  
+  function getMean(lists){
+  	var sum = 0;
+  	var num = 0;
+  	jQuery.each(lists.all(), function(b){
+  		sum += lists.all()[b].key * lists.all()[b].value;
+  		num += lists.all()[b].value;
+  	});
+	return (sum/num).toFixed(2);
+  }
   
   window.filter = function(filters) {
     filters.forEach(function(d, i) { charts[i].filter(d); });
@@ -270,9 +327,11 @@ d3.csv("../static/data/mls_data_sample.csv", function(flights) {
     var flightsByDate = nestByDate.entries(date.top(20));
 
     div.each(function() {
+	  
+		
       var date = d3.select(this).selectAll(".date")
           .data(flightsByDate, function(d) { return d.key; });
-
+		  
       date.enter().append("div")
           .attr("class", "date");
         //.append("div")
@@ -280,7 +339,7 @@ d3.csv("../static/data/mls_data_sample.csv", function(flights) {
         //  .text(function(d) { return formatDate(d.values[0].date); });
 
       date.exit().remove();
-
+		
       var flight = date.order().selectAll(".flight")
           .data(function(d) { return d.values; }, function(d) { return d.index; });
 
@@ -318,9 +377,18 @@ d3.csv("../static/data/mls_data_sample.csv", function(flights) {
           .attr("class", "city")
           .text(function(d) { return d.City; });
 		  
+      flightEnter.append("div")
+          .attr("class", "address")
+          .text(function(d) { return d.Address; });
+		  
+      flightEnter.append("div")
+          .attr("class", "sqft")
+          .text(function(d) { return d.sqft; });
+		  
       flight.exit().remove();
-
+	  	
       flight.order();
+
     });
   }
 
@@ -472,7 +540,7 @@ d3.csv("../static/data/mls_data_sample.csv", function(flights) {
     chart.x = function(_) {
       if (!arguments.length) return x;
       x = _;
-      axis.scale(x);
+      axis.scale(x).ticks(4);
       brush.x(x);
       return chart;
     };
