@@ -77,12 +77,10 @@
 
 #flight-list .flight div {
   display: inline-block;
-  text-align: right;
 }
 
 #flight-list .time, 
 #flight-list .cdate{
-  color: #999;
   width: 150px;
 }
 
@@ -90,21 +88,28 @@
 #flight-list .bath,
 #flight-list .sqft,
 #flight-list .daysOn {
-	width: 40px;
+	width: 35px;
+	text-align: right;
 }
 
 #flight-list div.price{
-    width: 100px;
-    padding-right: 10px;
+    width: 105px;
+    padding-left: 10px;
 }
 #flight-list div.city,
 #flight-list div.address {
-  width: 150px;
+  width: 140px;
   padding-right: 10px;
 }
 #totals{
 	font-color:steelblue;
 }
+
+.head div {
+  display: inline-block;
+  background: #eee;
+}
+
 
 </style>
 </head>
@@ -139,7 +144,7 @@
 			<div class="meanValue pull-right"></div>
 		</div>
 		<div id="dayon-chart" class="chart">
-			<div class="title">Days on sale</div>
+			<div class="title">Days on Market</div>
 			<div class="meanValue pull-right"></div>
 		</div>
 		<div id="sqft-chart" class="chart">
@@ -153,9 +158,23 @@
 		<div id="date-chart" class="chart">
 			<div class="title">Date</div>
 		</div>
-		<aside class="offset9" id="totals"><span id="active">-</span> of <span id="total">-</span> flights selected.</aside>
+		<aside class="offset8" id="totals"><span id="active">-</span> of <span id="total">-</span> Properties selected.</aside>
+		<div id="googleMap" style="width:920px;height:380px;"></div>
 		<div id="lists">
 		  <div id="flight-list" class="list">
+			  <div class="head">
+				  <div class="flight">
+				  	<div class="time">Date In</div>
+					<div class="cdate">Date Out</div>
+					<div class="bed">br</div>
+					<div class="bath">ba</div>
+					<div class="daysOn">days</div>
+					<div class="price">price</div>
+					<div class="city">city</div>
+					<div class="address">address</div>
+					<div class="sqft">sqft</div>
+				</div>
+			</div>
 		  </div>
 		</div>
 		<footer>
@@ -169,9 +188,29 @@
 <link href="../static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
 <script src="../static/d3.js"></script>
 <script src="../static/crossfilter.v1.js"></script>
+<script src="http://maps.googleapis.com/maps/api/js?key=AIzaSyBHQjDDVd2CvW_oyB0VUyaV8Fk26-XYP80&sensor=false"></script>
 
 <script>
 var debug;
+var myCenter=new google.maps.LatLng(40.76746,-74.032295);
+var marker;
+function initialize()
+{
+	var mapProp = {
+	  center:myCenter,
+	  zoom:13,
+	  mapTypeId:google.maps.MapTypeId.ROADMAP
+	  };
+  
+	var map=new google.maps.Map(document.getElementById("googleMap"),mapProp);
+
+	marker=new google.maps.Marker({
+	  position:myCenter,
+	  animation:google.maps.Animation.BOUNCE
+	  });
+
+	marker.setMap(map);
+
 // (It's CSV, but GitHub Pages only gzip's JSON at the moment.)
 // d3.csv("../static/data/flights.json", function(flights) {
 d3.csv("../static/data/mls_dami.csv", function(flights) {
@@ -197,6 +236,11 @@ d3.csv("../static/data/mls_dami.csv", function(flights) {
 	d.bed = +d.Bedrooms;
 	d.bath = +d["Total Bathrooms"];
 	d.sqft = +d["Approx Sq Ft"];
+    d.lat = +d["Latitude"];
+    d.lng = +d["Longitude"];
+    d.latlngset = new google.maps.LatLng(d.lat, d.lng);
+	var markers = new google.maps.Marker({map: map, position: d.latlngset, icon:'../static/img/small_blue.png'});
+	markers.setMap(map);
 	debug = d;
   });
 
@@ -214,7 +258,9 @@ d3.csv("../static/data/mls_dami.csv", function(flights) {
       sqft = flight.dimension(function(d) { return  d.sqft; }),
       sqfts = sqft.group(function(d) { return Math.floor(d / 100) * 100; }),
       price = flight.dimension(function(d) { return  d.price; }),
-      prices = price.group(function(d) { return Math.floor(d / 1000) * 1000; });
+      prices = price.group(function(d) { return Math.floor(d / 1000) * 1000; }),
+	  ind = flight.dimension(function(d) { return d.index; }),
+	  inds = ind.group();
 	  
   console.log(d3.extent(flights, function(d) { return d.daysOn; }));
   
@@ -262,9 +308,8 @@ d3.csv("../static/data/mls_dami.csv", function(flights) {
       .x(d3.time.scale()
         .domain(d3.extent(flights, function(d) { return d.date; }))
         .rangeRound([0, 10 * 90]))
-        .filter([new Date(2007, 1, 1), new Date(2009, 1, 1)])
-		
-
+        .filter([new Date(2007, 1, 1), new Date(2009, 1, 1)]),
+    
   ];
   
   // Given our array of charts, which we assume are in the same order as the
@@ -285,7 +330,7 @@ d3.csv("../static/data/mls_dami.csv", function(flights) {
   
 
   renderAll();
-
+  
   // Renders the specified chart or list.
   function render(method) {
     d3.select(this).call(method);
@@ -293,16 +338,18 @@ d3.csv("../static/data/mls_dami.csv", function(flights) {
 	$("#bath-chart>.meanValue").text(getMean(baths));
 	$("#dayon-chart>.meanValue").text(getMean(dayons));
 	$("#sqft-chart>.meanValue").text(getMean(sqfts));
-	$("#price-chart>.meanValue").text("$"+getMean(prices));
+	$("#price-chart>.meanValue").text("$"+formatNumber(parseInt(getMean(prices))));
+	console.log();
   }
+  
 
   // Whenever the brush moves, re-rendering everything.
   function renderAll() {
     chart.each(render);
     list.each(render);
     d3.select("#active").text(formatNumber(all.value()));
-
-
+	console.log(ind);
+	debug = ind;
   }
 
   function getMean(lists){
@@ -327,10 +374,9 @@ d3.csv("../static/data/mls_dami.csv", function(flights) {
 
   function flightList(div) {
     var flightsByDate = nestByDate.entries(date.top(20));
-
+	
     div.each(function() {
 	  
-		
       var date = d3.select(this).selectAll(".date")
           .data(flightsByDate, function(d) { return d.key; });
 		  
@@ -586,5 +632,6 @@ d3.csv("../static/data/mls_dami.csv", function(flights) {
     return d3.rebind(chart, brush, "on");
   }
 });
-
+}
+google.maps.event.addDomListener(window, 'load', initialize);
 </script>
